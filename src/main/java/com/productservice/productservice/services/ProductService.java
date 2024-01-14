@@ -1,17 +1,23 @@
 package com.productservice.productservice.services;
 
+import com.productservice.productservice.exception.*;
+
 import com.productservice.productservice.dtos.FakeStoreProductDto;
 import com.productservice.productservice.models.Product;
 
+import java.util.List;
+
 public interface ProductService {
 
-    public Product getSingleProduct(long id);
+    Product getSingleProduct(Long id) throws ProductNotExistsException;
 
-    public Product updateProduct( FakeStoreProductDto productDto);
+    List<Product> getAllProducts() throws ProductNotExistsException;
 
-    public Product replaceProduct(Long id, Product product);
+    Product updateProduct(Long id, Product product);
 
-    public Product addNewProduct(FakeStoreProductDto productDto);
+    Product replaceProduct(Long id, Product product) throws ProductNotExistsException;
 
-    public FakeStoreProductDto[] getAllProducts();
+    Product addNewProduct(Product product);
+
+    Boolean deleteProduct(Long id);
 }

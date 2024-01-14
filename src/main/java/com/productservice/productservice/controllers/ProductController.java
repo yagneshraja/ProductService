@@ -2,6 +2,8 @@ package com.productservice.productservice.controllers;
 
 
 import com.productservice.productservice.dtos.FakeStoreProductDto;
+import com.productservice.productservice.dtos.SelfProductDto;
+import com.productservice.productservice.exception.ProductNotExistsException;
 import com.productservice.productservice.models.Category;
 import com.productservice.productservice.models.Product;
 import com.productservice.productservice.services.FakeStoreProductService;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
+import java.util.List;
 
 @RestController
 @RequestMapping("/products")
@@ -28,54 +31,62 @@ public class ProductController {
         this.restTemplate = restTemplate;
     }
 
-    @GetMapping()
-    public ResponseEntity<FakeStoreProductDto[]> getAllProdcts(){
 
-        FakeStoreProductDto[] products =  productService.getAllProducts();
-        return  new ResponseEntity<>(products, HttpStatus.OK);
+    @GetMapping()
+    public ResponseEntity<List<Product>> getAllProducts() throws ProductNotExistsException{
+
+        ResponseEntity<List<Product>> products = new ResponseEntity<>(
+                productService.getAllProducts(),
+                HttpStatus.OK);
+        return  products;
     }
 
 
     @GetMapping("/{id}")
-    public ResponseEntity<Product> getSingleProduct(@PathVariable("id") long id) {
-        Product p =  productService.getSingleProduct(id);
-        return  new ResponseEntity<>(p,HttpStatus.OK);
-    }
-
-    @PostMapping("")
-    public Product addNewProduct(@RequestBody FakeStoreProductDto productDto){
-        return productService.addNewProduct(productDto);
-    }
-
-
-    @PatchMapping("")
-    public Product updateProduct(@RequestBody FakeStoreProductDto productDto){
-        System.out.println(productDto.getId());
-        return productService.updateProduct(productDto);
+    public ResponseEntity<Product> getSingleProduct(@PathVariable("id") Long id) throws ProductNotExistsException {
+        return new ResponseEntity<>(productService.getSingleProduct(id),
+                HttpStatus.OK);
     }
 
     @PutMapping("/{id}")
-    public Product replaceProduct(
+    public ResponseEntity<Product> updateProduct(
             @PathVariable("id") Long id,
-            @RequestBody FakeStoreProductDto productDto){
-        Product p = convertFakeStoreProductToProduct(productDto);
-        return productService.replaceProduct(id,p);
+            @RequestBody Product product){
+        return new ResponseEntity<>(productService.updateProduct(id,product),HttpStatus.OK);
     }
 
-    private Product convertFakeStoreProductToProduct(FakeStoreProductDto fakeStoreProduct){
 
+    @PatchMapping("/{id}")
+    public ResponseEntity<Product> replaceProduct (
+            @PathVariable("id") Long id,
+            @RequestBody SelfProductDto productDto)throws ProductNotExistsException{
+        Product product = convertSelfProductDtotoProduct(productDto);
+        return new ResponseEntity<>(productService.replaceProduct(id,product) , HttpStatus.OK);
+    }
+
+    @PostMapping("")
+    public ResponseEntity<Product> addNewProduct(@RequestBody SelfProductDto selfProduct){
+        Product product = convertSelfProductDtotoProduct(selfProduct);
+        return new ResponseEntity<>(productService.addNewProduct(product), HttpStatus.OK);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Boolean> deleteProduct(@PathVariable("id") Long id){
+        return  new ResponseEntity<>(productService.deleteProduct(id) ,HttpStatus.OK);
+    }
+
+    private Product convertSelfProductDtotoProduct(SelfProductDto selfProduct){
         Product p = new Product();
-        p.setId(fakeStoreProduct.getId());
-        p.setDescription(fakeStoreProduct.getDescription());
-        p.setTitle(fakeStoreProduct.getTitle());
-        p.setPrice(fakeStoreProduct.getPrice());
+        p.setDescription(selfProduct.getDescription());
+        p.setTitle(selfProduct.getTitle());
+        p.setPrice(selfProduct.getPrice());
         Category c = new Category();
-        c.setName(fakeStoreProduct.getCategory());
+        c.setName(selfProduct.getCategory());
         p.setCategory(c);
-        p.setImageUrl(fakeStoreProduct.getImage());
+        p.setImageUrl(selfProduct.getImage());
         return p;
-    }
 
+    }
 
 
 }
